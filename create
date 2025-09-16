@@ -1,0 +1,18 @@
+- Table: Application
+CREATE TABLE Application (
+    ApplicationID VARCHAR(20) PRIMARY KEY,
+    ApplicationName VARCHAR(100)
+);
+ 
+-- Table: Resource
+CREATE TABLE Resource (
+    ResourceID INT PRIMARY KEY,
+    ResourceName VARCHAR(100)
+);
+ 
+-- Table: Role
+CREATE TABLE Role (
+    RoleName VARCHAR(50) PRIMARY KEY,
+    Rate DECIMAL(10,2)
+);
+ 
