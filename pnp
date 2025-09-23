@@ -1,0 +1,282 @@
+<?php include "partials/header.php";
+include "config/db.php";
+?>
+
+<?php
+
+
+// Add new record
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_record'])) {
+    $apm_id = $_POST['apm_id'];
+    $app_name = $_POST['app_name'];
+    $digital_unit = $_POST['digital_unit'];
+    $arrival_date = $_POST['arrival_date'];
+    $pnp_date = $_POST['pnp_date'];
+    $status = $_POST['status'];
+    $today = date("d-M");
+    $comments = $today . ": " . $_POST['comments'];
+
+    $sql = "INSERT INTO upgrade_tracker (APM_ID, APP_NAME, DIGITAL_UNIT, UPGRADE_FACTORY_ARRIVAL_DATE, PNP_COMPLETION_DATE, STATUS, BLOCKER_COMMENTS)
+            VALUES ('$apm_id', '$app_name', '$digital_unit', '$arrival_date', '$pnp_date', '$status', '$comments')";
+    $conn->query($sql);
+}
+
+// Update record
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_record'])) {
+    $id = $_POST['update_id'];
+    $arrival_date = $_POST['arrival_date'];
+    $pnp_date = $_POST['pnp_date'];
+    $status = $_POST['status'];
+    $new_comment = $_POST['new_comment'];
+
+    $existing_sql = "SELECT * FROM upgrade_tracker WHERE id = $id";
+    $existing_result = $conn->query($existing_sql);
+    $existing_row = $existing_result->fetch_assoc();
+
+    $existing_comments = $existing_row['BLOCKER_COMMENTS'];
+    if (!empty($new_comment)) {
+        $today = date("d-M");
+        $new_comment = $today . ": " . $new_comment;
+        $updated_comments = $new_comment . "\n" . $existing_comments;
+    } else {
+        $updated_comments = $existing_comments;
+    }
+
+    $old_arrival = $existing_row['UPGRADE_FACTORY_ARRIVAL_DATE'];
+    $old_pnp = $existing_row['PNP_COMPLETION_DATE'];
+
+    $update_sql = "UPDATE upgrade_tracker SET 
+        UPGRADE_FACTORY_ARRIVAL_DATE = '$arrival_date',
+        PNP_COMPLETION_DATE = '$pnp_date',
+        STATUS = '$status',
+        BLOCKER_COMMENTS = '$updated_comments',
+        OLD_UPGRADE_FACTORY_ARRIVAL_DATE = '$old_arrival',
+        OLD_PNP_COMPLETION_DATE = '$old_pnp'
+        WHERE id = $id";
+    $conn->query($update_sql);
+    header("Location: upgradetracker.php");
+    exit();
+}
+
+// Upload CSV with duplicate check
+
+$duplicate_found = false;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['upload_csv'])) {
+    if (is_uploaded_file($_FILES['csv_file']['tmp_name'])) {
+        $file = fopen($_FILES['csv_file']['tmp_name'], 'r');
+        $header = fgetcsv($file); // Skip header
+
+        while (($row = fgetcsv($file)) !== false) {
+            $apm_id = $conn->real_escape_string($row[1]);
+            $app_name = $conn->real_escape_string($row[2]);
+            $digital_unit = $conn->real_escape_string($row[3]);
+            $arrival_date = $conn->real_escape_string($row[4]);
+            $pnp_date = $conn->real_escape_string($row[5]);
+            $status = $conn->real_escape_string($row[6]);
+            $comments = $conn->real_escape_string($row[7]);
+
+            $check_sql = "SELECT * FROM upgrade_tracker WHERE 
+                APM_ID = '$apm_id' AND APP_NAME = '$app_name' AND DIGITAL_UNIT = '$digital_unit' AND 
+                UPGRADE_FACTORY_ARRIVAL_DATE = '$arrival_date' AND PNP_COMPLETION_DATE = '$pnp_date' AND 
+                STATUS = '$status' AND BLOCKER_COMMENTS = '$comments'";
+            $check_result = $conn->query($check_sql);
+
+            
+            if ($check_result->num_rows > 0) {
+                $duplicate_found = true;
+                continue; // Skip exact duplicate
+            }
+
+            $insert_sql = "INSERT INTO upgrade_tracker (APM_ID, APP_NAME, DIGITAL_UNIT, UPGRADE_FACTORY_ARRIVAL_DATE, PNP_COMPLETION_DATE, STATUS, BLOCKER_COMMENTS)
+                VALUES ('$apm_id', '$app_name', '$digital_unit', '$arrival_date', '$pnp_date', '$status', '$comments')";
+            $conn->query($insert_sql);
+        }
+
+        fclose($file);
+
+        if ($duplicate_found) {
+            echo "<script>alert('Some data already exists and was skipped.'); window.location.href='upgradetracker.php';</script>";
+        } else {
+            header("Location: upgradetracker.php");
+        }
+        exit();
+    }
+}
+
+// Fetch all records
+$sql = "SELECT * FROM upgrade_tracker";
+$result = $conn->query($sql);
+
+// Fetch record for editing
+$edit_row = null;
+if (isset($_POST['edit_id'])) {
+    $edit_id = $_POST['edit_id'];
+    $edit_sql = "SELECT * FROM upgrade_tracker WHERE id = $edit_id";
+    $edit_result = $conn->query($edit_sql);
+    $edit_row = $edit_result->fetch_assoc();
+}
+if (isset($_POST['delete_id'])) {
+    $id = $_POST['delete_id'];
+    $delete_sql = "DELETE FROM upgrade_tracker WHERE id = $id";
+    $conn->query($delete_sql);
+}
+?>
+
+       
+    <script>
+        function showModal(id) {
+            document.getElementById(id).style.display = 'block';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+    </script>
+   
+
+    <?php if (basename($_SERVER['PHP_SELF']) == 'upgradetracker.php') { ?>
+<div class="header-bar">
+    <a href="homepage.php">
+        <img src="assets/header-logo.png" alt="Companylogo"></img>
+    </a>
+    <div class="header-buttons">
+        <button class="btn" onclick="showModal('addModal')">Add</button>
+        <button class="btn" onclick="showModal('uploadModal')">Upload CSV</button>
+    </div>
+</div>
+ <h3>Upgrade Tracker Page</h3>
+<?php } ?>
+
+
+
+
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('uploadModal')">&times;</span>
+            <form method="post" enctype="multipart/form-data">
+                <label>Choose CSV File:</label>
+                <input type="file" name="csv_file" accept=".csv" required>
+                <button type="submit" name="upload_csv" class="button">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addModal')">&times;</span>
+            <form method="post">
+                <h2>Add Details</h2>
+                <label>APM ID:</label><input type="text" name="apm_id" placeholder="APM ID" required>
+                <label>App Name:</label><input type="text" name="app_name" placeholder="App Name" required>
+                <label for="digital_unit">Digital Unit:</label>
+                <select name="digital_unit" id="digital_unit" required>
+                    <option value="">--Select Digital Unit--</option>
+                    <option value="MS">Digital M&S</option>
+                    <option value="Tech">Digital Tech</option>
+                    <option value="GBU">Digital GBU</option>
+                    <option value="CF">Digital CF</option>
+                </select>
+                <label>Arrival Date:</label><input type="date" name="arrival_date" required>
+                <label>PnP Completion Date:</label><input type="date" name="pnp_date" required>
+                <label for="status">Status:</label>
+                 <select name="status" id="status" required>
+                             <option value="">--Select Status--</option>
+                             <option value="Pending">Pending</option>
+                              <option value="In Progress">In Progress</option>
+                             <option value="Blocked">Blocked</option>
+                 </select>
+                <label>Blockers / Comments:</label><textarea name="comments" placeholder="Blockers / Comments" rows="3"></textarea>
+                <button type="submit" name="add_record" class="btn">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <?php if ($edit_row) { ?>
+    <div id="editModal" class="modal" style="display:block;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editModal')">&times;</span>
+            <form method="post">
+                <input type="hidden" name="update_id" value="<?php echo $edit_row['id']; ?>">
+                <label>Arrival Date:</label><input type="date" name="arrival_date" value="<?php echo $edit_row['UPGRADE_FACTORY_ARRIVAL_DATE']; ?>" required>
+                <label>PnP Completion Date:</label><input type="date" name="pnp_date" value="<?php echo $edit_row['PNP_COMPLETION_DATE']; ?>" required>
+                        <label for="status">Status:</label>
+                        <select name="status" id="status" required>
+                            <option value="">--Select Status--</option>
+                            <option value="Pending" <?= $edit_row['STATUS'] == 'Pending' ? 'selected' : '' ?>>Pending</option>
+                            <option value="In Progress" <?= $edit_row['STATUS'] == 'In Progress' ? 'selected' : '' ?>>In Progress</option>
+                            <option value="Completed" <?= $edit_row['STATUS'] == 'Completed' ? 'selected' : '' ?>>Completed</option>
+                        </select>
+                <label>Add Blocker Comment:</label><textarea name="new_comment" placeholder="Add Blocker Comment" rows="3"></textarea>
+                <button type="submit" name="update_record" class="btn">Update</button>
+            </form>
+        </div>
+    </div>
+    <?php } ?>
+
+    <table>
+        <tr>
+            <th>Sl. No.</th>
+            <th>APM ID</th>
+            <th>App Name</th>
+            <th>Digital Unit</th>
+            <th>Upgrade Factory Arrival Date</th>
+            <th>Planned / Actual PnP Completion Date</th>
+            <th>Status</th>
+            <th>Blockers / Comments</th>
+            <th>Action</th>
+        </tr>
+        <?php
+if ($result->num_rows > 0) {
+    $sl_no = 1;
+    while($row = $result->fetch_assoc()) {
+        $status_raw = $row['STATUS'];
+        $status_class = 'status-' . strtolower(str_replace(' ', '', $status_raw)); // e.g., "In Progress" → "status-inprogress"
+
+        echo "<tr>
+            <td>{$sl_no}</td>
+            <td>{$row['APM_ID']}</td>
+            <td>{$row['APP_NAME']}</td>
+            <td>{$row['DIGITAL_UNIT']}</td>
+            <td>";
+
+        //  old arrival date if changed
+        if (!empty($row["OLD_UPGRADE_FACTORY_ARRIVAL_DATE"]) && $row["OLD_UPGRADE_FACTORY_ARRIVAL_DATE"] !== $row["UPGRADE_FACTORY_ARRIVAL_DATE"]) {
+            echo "<s>{$row['OLD_UPGRADE_FACTORY_ARRIVAL_DATE']}</s><br>";
+        }
+        echo "{$row['UPGRADE_FACTORY_ARRIVAL_DATE']}</td><td>";
+
+        // Show old PnP date if changed
+        if (!empty($row["OLD_PNP_COMPLETION_DATE"]) && $row["OLD_PNP_COMPLETION_DATE"] !== $row["PNP_COMPLETION_DATE"]) {
+            echo "<s>{$row['OLD_PNP_COMPLETION_DATE']}</s><br>";
+        }
+        echo "{$row['PNP_COMPLETION_DATE']}</td>";
+
+        // Status cell with color
+        echo "<td class='status-cell {$status_class}'>{$status_raw}</td>";
+
+        // Comments
+        echo "<td><pre>" . implode("\n", array_reverse(explode("\n", $row["BLOCKER_COMMENTS"]))) . "</pre></td>";
+
+        // Edit button
+        echo "<td>
+                <form method='post'>
+                    <input type='hidden' name='edit_id' value='{$row['id']}'>
+                    <button type='submit' class='btn'>Edit</button>
+                </form><br>
+                <form method='post'>
+                    <input type='hidden' name='delete_id' value='{$row['id']}'>
+                    <button type='submit' class='btn button-danger'>Delete</button>
+                </form>
+              </td>
+        </tr>";
+
+        $sl_no++;
+    }
+} else {
+    echo "<tr><td colspan='9'>No records found</td></tr>";
+}
+?>
+
+    </table>
+
+<?php include "partials/footer.php";?>
