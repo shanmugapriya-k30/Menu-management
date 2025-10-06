@@ -1,0 +1,238 @@
+
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Oct 03, 2025 at 03:26 PM
+-- Server version: 8.0.41
+-- PHP Version: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `upgrade_tracker_db`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `application`
+--
+
+CREATE TABLE `application` (
+  `ApplicationID` varchar(20) NOT NULL,
+  `ApplicationName` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `application`
+--
+
+INSERT INTO `application` (`ApplicationID`, `ApplicationName`) VALUES
+('APM0005753', 'GEWAESSERSCHUTZ'),
+('APM0008931', 'BIOVIA_ACD'),
+('APM0009200', 'STORM'),
+('APM0009282', 'ARMADA');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `master`
+--
+
+CREATE TABLE `master` (
+  `id` int NOT NULL,
+  `ApplicationID` varchar(20) DEFAULT NULL,
+  `ApplicationName` varchar(100) DEFAULT NULL,
+  `ResourceID` int DEFAULT NULL,
+  `ResourceName` varchar(100) DEFAULT NULL,
+  `RoleName` varchar(50) DEFAULT NULL,
+  `TotalEffort` decimal(10,2) DEFAULT NULL,
+  `Rate` decimal(10,2) DEFAULT NULL,
+  `TotalCost` decimal(10,2) DEFAULT NULL,
+ 
+  `Grade` varchar(10) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `master`
+--
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `resource`
+--
+
+CREATE TABLE `resource` (
+  `ResourceID` int NOT NULL,
+  `ResourceName` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `resource`
+--
+
+INSERT INTO `resource` (`ResourceID`, `ResourceName`) VALUES
+(222222, 'Lokesh'),
+(2009385, 'Supreeth Shetty'),
+(2207029, 'Abishek'),
+(2207036, 'Pavan Kumar'),
+(2207037, 'Nithish Kumar M'),
+(2344746, 'Samrat Singha'),
+(2397771, 'NISHA'),
+(2397772, 'ANKITA'),
+(2399999, 'Priya');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `role`
+--
+
+CREATE TABLE `role` (
+  `RoleName` varchar(50) NOT NULL,
+  `Rate` decimal(10,2) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `role`
+--
+
+INSERT INTO `role` (`RoleName`, `Rate`) VALUES
+('', 0.00),
+('AIMS', 1.80),
+('AIMS Support', 1.50),
+('Appian Developer', 2.00),
+('Appian Lead', 2.80),
+('Architect', 3.00),
+('Database', 2.00),
+('Developer', 1.80),
+('IICS Developer', 1.90),
+('IICS Lead', 2.40),
+('IICS PM', 2.60),
+('Java Developer', 1.90),
+('Java Lead', 2.40),
+('Junior Developer', 1.40),
+('Junior Tester', 1.30),
+('PBI Developer', 1.90),
+('PBI Lead', 2.30),
+('PBI Manager', 2.70),
+('PBI Sr. Developer', 2.20),
+('PBI Tester', 1.60),
+('PM', 2.00),
+('Sr Tester', 2.00),
+('Sr. UI Developer', 2.20),
+('Tech Developer', 2.00),
+('Test Lead', 2.10),
+('Tester', 1.60);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `upgrade_tracker`
+--
+
+CREATE TABLE `upgrade_tracker` (
+  `id` int NOT NULL,
+  `APM_ID` varchar(50) NOT NULL,
+  `APP_NAME` varchar(100) NOT NULL,
+  `DIGITAL_UNIT` varchar(100) NOT NULL,
+  `UPGRADE_FACTORY_ARRIVAL_DATE` date NOT NULL,
+  `PNP_COMPLETION_DATE` date NOT NULL,
+  `STATUS` varchar(50) NOT NULL,
+  `BLOCKER_COMMENTS` text NOT NULL,
+  `OLD_UPGRADE_FACTORY_ARRIVAL_DATE` date DEFAULT NULL,
+  `OLD_PNP_COMPLETION_DATE` date DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `upgrade_tracker`
+--
+
+INSERT INTO `upgrade_tracker` (`id`, `APM_ID`, `APP_NAME`, `DIGITAL_UNIT`, `UPGRADE_FACTORY_ARRIVAL_DATE`, `PNP_COMPLETION_DATE`, `STATUS`, `BLOCKER_COMMENTS`, `OLD_UPGRADE_FACTORY_ARRIVAL_DATE`, `OLD_PNP_COMPLETION_DATE`) VALUES
+(8, 'APM0055933', 'SFD-ZVS-FF', 'Digital M&S', '2025-04-16', '2025-05-13', 'In Progress', '23-May: Revised PnP to be shared and submitted with AO\n16-May: AO confirmed the scope, PnP activities initiated\n09-May: AO not clear on scope of servers involved and environment, requires time to confirm post which we can initiate PnP activities\n02-May: AO looking to scope of servers along with TDR comments, need to align on same to initiate PnP\n25-Apr: alignment call initiated, AO looking for server in scope to be checked\n18-Apr: To initiate PnP', NULL, NULL),
+(9, 'APM0054868', 'IBM ILMT', 'Digital Tech', '2025-05-14', '2025-06-04', 'In Progress', '23-May: Yet to initiate PnP', NULL, NULL),
+(10, 'APM0076523', 'DAWREK-SIA', 'Digital M&S', '2025-05-21', '2025-06-11', 'In Progress', '23-May: Yet to initiate PnP', NULL, NULL),
+(11, 'APM0074963', 'SK Site Access Control Software', 'Digital GBU', '2025-05-21', '2025-06-11', 'In Progress', '23-May: Yet to initiate PnP', NULL, NULL),
+(12, 'APM0075419', 'IVTRACER Vitry CRV', 'Digital CF', '2025-05-14', '2025-06-04', 'BLOCKED', '23-May: Yet to initiate PnP', NULL, NULL);
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `application`
+--
+ALTER TABLE `application`
+  ADD PRIMARY KEY (`ApplicationID`);
+
+--
+-- Indexes for table `master`
+--
+ALTER TABLE `master`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ApplicationID` (`ApplicationID`),
+  ADD KEY `ResourceID` (`ResourceID`),
+  ADD KEY `RoleName` (`RoleName`);
+
+--
+-- Indexes for table `resource`
+--
+ALTER TABLE `resource`
+  ADD PRIMARY KEY (`ResourceID`);
+
+--
+-- Indexes for table `role`
+--
+ALTER TABLE `role`
+  ADD PRIMARY KEY (`RoleName`);
+
+--
+-- Indexes for table `upgrade_tracker`
+--
+ALTER TABLE `upgrade_tracker`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `master`
+--
+ALTER TABLE `master`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+
+--
+-- AUTO_INCREMENT for table `upgrade_tracker`
+--
+ALTER TABLE `upgrade_tracker`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `master`
+--
+ALTER TABLE `master`
+  ADD CONSTRAINT `master_ibfk_1` FOREIGN KEY (`ApplicationID`) REFERENCES `application` (`ApplicationID`),
+  ADD CONSTRAINT `master_ibfk_2` FOREIGN KEY (`ResourceID`) REFERENCES `resource` (`ResourceID`),
+  ADD CONSTRAINT `master_ibfk_3` FOREIGN KEY (`RoleName`) REFERENCES `role` (`RoleName`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
